@@ -11,9 +11,11 @@
       기존 항목의 마감일만 변경 (접수기간 연장 반영). 제목 일부는 정확히 1건에만 일치해야 함.
 
 new_entries.js 형식 (항목마다 '  { n: ' 로 시작, 한 항목은 여러 줄 가능, 문자열 안에 큰따옴표 금지):
-  { n: "제목", h: "주최", c: "video|ai|ad|photo|design|multi", d: "YYYY-MM-DD", e: "univ|youth|all",
+  { n: "제목", h: "주최", c: "film|video|ai|ad|photo|design|multi", d: "YYYY-MM-DD", e: "univ|youth|all",
     who: "응모자격", spec: "규격·접수방법", theme: "주제", prize: "짧은 상금", prizeFull: "상금 상세",
-    link: "https://...", src: "출처" },
+    note: "주의사항(선택)", link: "https://...", src: "출처" },
+  team(캡스톤 팀 이름)은 사람이 팀 보드를 보고 넣는 필드다. 자동 수집 항목에는 넣지 않는다.
+  link 는 team 이 있는 항목만 비워 둘 수 있다.
 """
 import re, subprocess, sys, json, shutil, os
 
@@ -92,7 +94,7 @@ def main():
         if ym != cur:
             if cur is not None:
                 lines.append('')
-            label = KOR[d[5:7]] if d[:4] == '2026' else '%s년 %s' % (d[:4], KOR[d[5:7]])
+            label = '%s년 %s' % (d[:4], KOR[d[5:7]])
             lines.append('  // ---------- %s ----------' % label)
             cur = ym
         lines.append(x + ',')
@@ -103,9 +105,9 @@ def main():
 const fs=require('fs');const s=fs.readFileSync('index.html','utf8');
 const a=s.indexOf('const DATA = [');const b=s.indexOf('\n];',a)+3;
 const D=eval('('+s.slice(a+'const DATA = '.length,b-1)+')');
-const C=new Set(['video','ai','ad','photo','design','multi']),E=new Set(['univ','youth','all']);
-const req=['n','h','c','d','e','who','spec','theme','prize','prizeFull','link','src'];
-const bad=D.filter(x=>req.some(k=>!x[k])||!C.has(x.c)||!E.has(x.e)||!/^\d{4}-\d{2}-\d{2}$/.test(x.d)||!/^https?:\/\//.test(x.link));
+const C=new Set(['film','video','ai','ad','photo','design','multi']),E=new Set(['univ','youth','all']);
+const req=['n','h','c','d','e','who','spec','theme','prize','prizeFull','src'];
+const bad=D.filter(x=>req.some(k=>!x[k])||!C.has(x.c)||!E.has(x.e)||!/^\d{4}-\d{2}-\d{2}$/.test(x.d)||(x.link?!/^https?:\/\//.test(x.link):!x.team));
 const sorted=D.every((x,i)=>i==0||D[i-1].d<=x.d);
 console.log(JSON.stringify({total:D.length,bad:bad.map(x=>x.n||'?'),sorted}));
 if(bad.length||!sorted)process.exit(1);
